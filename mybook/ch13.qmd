@@ -1,0 +1,85 @@
+# 동시성 (Concurrency)
+
+동시성은 파이썬과 Swift에서 다르게 다뤄집니다. 파이썬에서는 GIL (Global Interpreter Lock) 때문에 진정한 멀티스레딩보다는 주로 `asyncio` 모듈을 이용한 비동기 프로그래밍 방식(event loop 기반)이나 멀티프로세싱을 사용합니다. 반면 Swift는 `async/await` 문법을 지원하며, 스레드를 기본으로 한 동시성 제어가 가능합니다.
+
+### Async/Await 기본 개념
+
+Swift의 `async/await`은 파이썬과 유사합니다. 비동기로 작동하는 함수는 `async`로 표시하고, 그 결과가 반환될 때까지 기다릴 때는 `await`를 사용합니다.
+
+**파이썬:**
+```python
+import asyncio
+
+async def fetch_data(url):
+    await asyncio.sleep(1) # 네트워크 지연을 흉내냅니다
+    return f"{url}의 데이터"
+
+async def main():
+    result = await fetch_data("https://example.com")
+    print(result)
+
+asyncio.run(main())
+```
+
+**Swift:**
+```swift
+import Foundation
+
+func fetchData(url: String) async -> String {
+    // 임의의 네트워크 딜레이 흉내
+    try? await Task.sleep(nanoseconds: 1_000_000_000)
+    return "\(url)의 데이터"
+}
+
+Task {
+    let result = await fetchData(url: "https://example.com")
+    print(result)
+}
+```
+
+- Swift의 `func ... async`는 함수의 정의에 놓이며 파이썬의 `async def`와 비슷합니다.
+- `Task {}` 단위로 비동기 작업을 묶어 실행할 수 있습니다.
+
+### 여러 작업 동시에 실행하기 (Task Group & Let)
+
+두 개 이상의 비동기 작업을 동시에 수행할 때 파이썬은 `asyncio.gather`를 사용하지만, Swift는 `async let`이나 `TaskGroup`을 제공합니다.
+
+**파이썬:**
+```python
+async def download_all():
+    urls = ["https://a.com", "https://b.com"]
+    results = await asyncio.gather(*(fetch_data(u) for u in urls))
+    print(results)
+```
+
+**Swift:**
+```swift
+func downloadAll() async {
+    async let first = fetchData(url: "https://a.com")
+    async let second = fetchData(url: "https://b.com")
+    
+    // 두 작업이 끝날 때까지 동시 대기
+    let results = await [first, second]
+    print(results)
+}
+```
+
+### Actor (안전한 동시성 제어)
+
+파이썬에서는 데이터 충돌을 피하기 위해 `Lock()` 객체 같은 동기화 기본 요소를 사용하지만, Swift 5.5부터는 **Actor**를 통해 여러 스레드에서 동시에 접근 가능한 상태를 안전하게 격리(Isolate)할 수 있습니다. Actor는 클래스와 유사하지만, 한 번에 하나의 태스크만 Actor의 내부 상태에 접근할 수 있습니다.
+
+```swift
+actor BankAccount {
+    var balance: Int = 0
+    
+    func deposit(amount: Int) {
+        balance += amount
+    }
+}
+
+let account = BankAccount()
+Task {
+    await account.deposit(amount: 100)
+    print(await account.balance)
+}
+```

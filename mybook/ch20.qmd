@@ -1,0 +1,63 @@
+# 테스트 주도 개발 (Test-Driven Development)
+
+파이썬 개발자들은 `unittest`, `pytest`와 같은 도구를 통해 강력한 테스트 환경을 경험해 왔습니다. Swift는 애플 생태계에서 전통적으로 XCTest를 사용했지만, 최근 오픈 소스 **Swift Testing** 패키지가 공개되면서 테스트 작성법이 파이썬의 `pytest`처럼 놀랍도록 간결해졌습니다.
+
+### unittest에서 XCTest로
+
+**파이썬 (`unittest`):**
+```python
+import unittest
+
+def add(a, b):
+    return a + b
+
+class TestMath(unittest.TestCase):
+    def test_add(self):
+        self.assertEqual(add(1, 2), 3)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+**Swift (`XCTest` - 전통적인 방식):**
+```swift
+import XCTest
+
+func add(_ a: Int, _ b: Int) -> Int { a + b }
+
+final class MathTests: XCTestCase {
+    func testAdd() {
+        XCTAssertEqual(add(1, 2), 3)
+    }
+}
+```
+
+클래스 기반의 이러한 접근은 각 파일마다 중복되는 틀(Boilerplate)이 있었습니다.
+
+### pytest에서 Swift Testing으로
+
+**파이썬 (`pytest`):**
+```python
+def test_add_pytest():
+    assert add(1, 2) == 3
+```
+
+**Swift (`Swift Testing` - 최신 방식):**
+Swift 6.0 및 Swift Testing 매크로를 이용하면 파이썬의 pytest처럼 함수형이고 간결한 테스트 블록을 만들 수 있습니다.
+
+```swift
+import Testing
+
+@Test("기본 덧셈 테스트 확인") // pytest의 마커(marker)와 유사
+func addNumbers() {
+    let result = add(1, 2)
+    #expect(result == 3)       // Python의 assert처럼 표현식 내부를 검증
+}
+
+@Test(arguments: [(1, 2, 3), (2, 3, 5), (0, -1, -1)])
+func addMultipleNumbers(a: Int, b: Int, expected: Int) {
+    #expect(add(a, b) == expected)
+}
+```
+
+파이썬의 인자화된 테스트(`@pytest.mark.parametrize`)가 Swift의 매크로 기반 시스템(`@Test(arguments:)`)으로 구현되어 매우 유사한 사용 경험을 제공합니다.

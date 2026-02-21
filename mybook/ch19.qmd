@@ -1,0 +1,43 @@
+# 명령줄 도구 만들기 (CLI Tools)
+
+파이썬은 간단한 파일 입출력을 처리하거나 텍스트를 파싱하는 명령줄 도구(CLI)를 개발하는 데 매우 인기 있는 언어입니다. Swift는 정적 타이핑과 빠른 실행 속도의 이점을 가지고 있어, 명령줄 유틸리티를 만드는 최신 대안으로 사랑받고 있습니다.
+
+### argparse와 ArgumentParser
+
+**파이썬 (`argparse` 모듈):**
+```python
+import argparse
+
+parser = argparse.ArgumentParser(description="인사말을 반환합니다")
+parser.add_argument("name", help="인사할 사람의 이름")
+parser.add_argument("--count", type=int, default=1, help="반복 횟수")
+
+args = parser.parse_args()
+
+for _ in range(args.count):
+    print(f"Hello, {args.name}!")
+```
+
+**Swift (Swift Argument Parser 패키지):**
+SwiftPM에서 `swift-argument-parser` 패키지를 가져와 사용할 수 있습니다. 타입 안정성 덕분에 런타임에 인자 형식이 맞지 않으면 애플리케이션 프레임워크가 바로 사용법을 안내합니다.
+
+```swift
+import ArgumentParser
+
+struct Greet: ParsableCommand {
+    @Argument(help: "인사할 사람의 이름")
+    var name: String
+    
+    @Option(help: "반복 횟수")
+    var count: Int = 1
+    
+    mutating func run() throws {
+        for _ in 0..<count {
+            print("Hello, \(name)!")
+        }
+    }
+}
+
+Greet.main()
+```
+Swift의 방식은 구조체의 프로퍼티(`name`, `count`)에 기반하여 코드가 자체 문서화(Self-Documenting)되는 매우 선언적인 방식을 채택하고 있습니다. 빌드된 산출물은 단일 바이너리(Single Binary)이므로, 명령을 복사해서 배포하기도 수월합니다.

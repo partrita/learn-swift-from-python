@@ -1,0 +1,107 @@
+# JSON 파싱과 네트워킹
+
+파이썬 개발자들은 주로 `requests` 라이브러리와 `json` 모듈을 사용해 빠르게 API 통신과 파싱을 처리합니다. 반면 Swift에서는 기본 기능인 `URLSession`과 `Codable` 프로토콜을 사용해 네트워크 요청과 JSON 인코딩/디코딩 작업을 직관적이면서도 안전하게 처리합니다.
+
+### Codable과 JSON
+
+JSON 데이터를 파이썬의 딕셔너리로 다루는 대신, Swift는 타입을 안전하게 변환할 수 있는 `Codable`이라는 프로토콜을 사용합니다.
+
+**파이썬:**
+```python
+import json
+
+json_string = '{"name": "Alice", "age": 30}'
+
+# JSON을 딕셔너리로 변환
+data = json.loads(json_string)
+print(data["name"])
+
+# 딕셔너리를 JSON으로 변환
+print(json.dumps(data))
+```
+
+**Swift:**
+```swift
+import Foundation
+
+struct User: Codable {
+    var name: String
+    var age: Int
+}
+
+let jsonStr = """
+{
+    "name": "Alice",
+    "age": 30
+}
+"""
+
+if let jsonData = jsonStr.data(using: .utf8) {
+    let decoder = JSONDecoder()
+    
+    // JSON 데이터를 User 구조체 인스턴스로 파싱
+    if let user = try? decoder.decode(User.self, from: jsonData) {
+        print(user.name) // "Alice"
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        // 구조체를 다시 JSON으로 직렬화
+        if let encodedData = try? encoder.encode(user),
+           let stringOutput = String(data: encodedData, encoding: .utf8) {
+            print(stringOutput)
+        }
+    }
+}
+```
+
+파이썬의 동적 딕셔너리(`data["name"]`)와 달리 Swift에서는 미리 정의된 구조체(`User`) 속성에 접근합니다. 이는 오타로 인한 오류를 컴파일 단계에서 방지합니다.
+
+### URLSession으로 HTTP 요청 가로채기
+
+파이썬의 `requests.get()`과 유사한 작동을 Swift에서 기본 `URLSession`을 사용해 처리할 수 있습니다. 최근 `async/await`의 도입으로 네트워크 패치 코드가 훨씬 깔끔해졌습니다.
+
+**파이썬:**
+```python
+import requests
+
+response = requests.get("https://api.github.com/users/apple")
+if response.status_code == 200:
+    data = response.json()
+    print(data["login"])
+```
+
+**Swift:**
+```swift
+import Foundation
+
+struct GitHubUser: Codable {
+    let login: String
+    let id: Int
+}
+
+func fetchUser() async throws -> GitHubUser {
+    let url = URL(string: "https://api.github.com/users/apple")!
+    
+    // 네트워크 데이터 가져오기 (async)
+    let (data, response) = try await URLSession.shared.data(from: url)
+    
+    guard let httpResponse = response as? HTTPURLResponse, 
+          httpResponse.statusCode == 200 else {
+        throw URLError(.badServerResponse)
+    }
+    
+    // JSON 데이터 파싱
+    let user = try JSONDecoder().decode(GitHubUser.self, from: data)
+    return user
+}
+
+// 비동기 작업 실행
+Task {
+    if let user = try? await fetchUser() {
+        print(user.login)
+    }
+}
+```
+
+Swift의 `URLSession`은 `requests`만큼 코드가 짤막하지는 않지만, 강타입 시스템을 통해 안전성을 보장하고 기본적으로 비동기 환경에 완전히 어우러집니다.

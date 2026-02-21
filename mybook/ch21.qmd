@@ -1,0 +1,44 @@
+# Python과 Swift 연결하기 (PythonKit)
+
+가장 흥미로운 부분 중 하나는 머신 러닝, 스크립팅 생태계의 대명사인 파이썬을 빠르고 안전한 **Swift 안에서** 있는 그대로 사용할 수 있다는 사실입니다. 
+
+### PythonKit 소개
+
+`PythonKit`은 Swift에서 파이썬 인터프리터의 API를 래핑하여, 파이썬 패키지를 Swift 환경으로 불러와서 마치 파이썬처럼 문법을 사용할 수 있게 해주는 마법 같은 패키지입니다. 
+
+### Swift에서 Python Pandas 사용하기
+
+만약 Swift로 데이터 분석 파이프라인이나 macOS 앱을 작성하면서도, 이미 구성된 파이썬 생태계(`numpy`, `pandas`, `matplotlib`)를 사용하고 싶다면 이 방식대로 구현하면 됩니다.
+
+**Swift + PythonKit:**
+```swift
+// Swift 코드입니다!
+import PythonKit
+
+// 파이썬 모듈 가져오기 (import pandas as pd 와 동일)
+let np = Python.import("numpy")
+let pd = Python.import("pandas")
+
+print("Python \(Python.version)와 연동되었습니다.")
+
+// 파이썬 딕셔너리 및 데이터프레임 생성
+let data: [String: PythonObject] = [
+    "Name": ["Alice", "Bob", "Charlie"],
+    "Age": [25, 30, 35]
+]
+
+// pd.DataFrame(data)
+let df = pd.DataFrame(data)
+
+print(df) // 데이터프레임이 파이썬과 똑같이 출력됩니다.
+
+// numpy 사용 (np.array)
+let array = np.array([1, 2, 3])
+print(array * 2) // [2, 4, 6]
+```
+
+단, 이 코드가 작동하기 위해서는 실행 스크립트나 앱이 파이썬 인터프리터 동적 라이브러리(`libpython...dylib`, macOS 기준)에 접근할 수 있게 환경 변수(`PYTHON_LIBRARY`) 등을 구성해야 할 수도 있습니다.
+
+### 결론
+
+Swift 개발 과정 중 파이썬 생태계에 대한 접근이 불가피하더라도 걱정할 필요가 없습니다. PythonKit은 이 두 언어가 가진 각각의 장점을 완벽히 함께 쓸 수 있도록 돕는 아주 훌륭한 다리입니다.

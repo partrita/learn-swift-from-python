@@ -2,8 +2,8 @@ project:
   type: book
 
 book:
-  title: "learn-swift-from-python"
-  author: "Norah Jones"
+  title: "파이썬으로 배우는 스위프트"
+  author: "Taeyoon Kim"
   date: "2/21/2026"
   chapters:
     - index.qmd
@@ -18,16 +18,22 @@ book:
     - ch09.qmd
     - ch10.qmd
     - ch11.qmd
+    - ch12.qmd
+    - ch13.qmd
+    - ch14.qmd
+    - ch15.qmd
+    - ch16.qmd
+    - ch17.qmd
+    - ch18.qmd
+    - ch19.qmd
+    - ch20.qmd
+    - ch21.qmd
 
 bibliography: references.bib
+number-titles: false
 
 format:
   html:
     theme:
       - cosmo
       - brand
-  pdf:
-    documentclass: scrreprt
-
-
-

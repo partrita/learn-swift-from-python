@@ -1,0 +1,54 @@
+# 결과 빌더 (Result Builders)
+
+결과 빌더는 복잡한 객체나 선언 구문을 간결하게 만드는 Swift만의 기능입니다. 대표적으로 SwiftUI가 UI 계층을 그리는 방식이 이 기술로 구현되어 있습니다.
+
+### 파이썬에서의 DSL(Domain Specific Language) 구현
+
+파이썬에서는 주로 메서드 체이닝이나 클래스를 확장해 HTML과 같은 DOM 트리 빌더를 만들지만 블록 수준에서의 자연스러운 계층 표현은 한계가 있습니다.
+
+**파이썬:**
+```python
+# 파이썬에서 HTML 빌더 흉내내기
+html = Tag("html", [
+    Tag("body", [
+        Tag("h1", ["Hello, Python DSL"]),
+        Tag("p", ["이 방식은 쉼표나 괄호가 많아집니다."])
+    ])
+])
+```
+
+### Swift의 @resultBuilder
+
+Swift에서는 이를 위해 파라미터 영역 내에서 조건문이나 반복문을 포함한 모든 선언문을 특정 구조체(결과)로 모아주는 능력을 제공합니다.
+
+**Swift:**
+```swift
+@resultBuilder
+struct HTMLBuilder {
+    static func buildBlock(_ components: String...) -> String {
+        return components.joined(separator: "\n")
+    }
+}
+
+func html(@HTMLBuilder content: () -> String) -> String {
+    return "<html>\n\(content())\n</html>"
+}
+
+// SwiftUI와 같은 직관적인 계층 표현
+let document = html {
+    "<body>"
+    "    <h1>Hello, Swift Builder</h1>"
+    "    <p>배열이나 콤마 없이 선언형 코드를 작성할 수 있습니다.</p>"
+    "</body>"
+}
+
+print(document)
+// <html>
+// <body>
+//     <h1>Hello, Swift Builder</h1>
+//     <p>배열이나 콤마 없이 선언형 코드를 작성할 수 있습니다.</p>
+// </body>
+// </html>
+```
+
+`@resultBuilder`는 리스트, 텍스트 뿐만 아니라 UI, 정규표현식(Regex Builder) 등 다양한 분야에서 가독성을 획기적으로 향상시킵니다.

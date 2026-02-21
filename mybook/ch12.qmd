@@ -1,0 +1,90 @@
+# 제네릭 (Generics)
+
+제네릭은 코드를 유연하고 재사용 가능하게 만드는 Swift의 강력한 기능 중 하나입니다. 파이썬은 동적 타입 언어이므로 기본적으로 모든 함수가 다양한 타입을 받을 수 있지만, Swift는 정적 타입 언어이므로 제네릭을 사용하여 타입 안전성을 유지하면서 재사용성을 높여야 합니다.
+
+### 제네릭 함수
+
+파이썬에서는 타입 힌팅 없이 함수를 작성하면 어떤 타입이든 받을 수 있습니다.
+
+**파이썬:**
+```python
+def swap(a, b):
+    return b, a
+
+x, y = swap(1, 2)
+```
+
+Swift에서 특정 타입에 종속되지 않는 함수를 만들기 위해서는 `<T>`와 같은 타입 매개변수를 사용합니다.
+
+**Swift:**
+```swift
+func swapTwoValues<T>(_ a: inout T, _ b: inout T) {
+    let temporaryA = a
+    a = b
+    b = temporaryA
+}
+
+var someInt = 3
+var anotherInt = 107
+swapTwoValues(&someInt, &anotherInt)
+
+var someString = "hello"
+var anotherString = "world"
+swapTwoValues(&someString, &anotherString)
+```
+
+### 제네릭 타입
+
+클래스, 구조체, 열거형도 제네릭으로 정의할 수 있습니다. 예를 들어, 요소의 타입에 관계없이 동작하는 스택 자료구조를 만들 수 있습니다.
+
+**파이썬:**
+```python
+class Stack:
+    def __init__(self):
+        self.items = []
+    
+    def push(self, item):
+        self.items.append(item)
+        
+    def pop(self):
+        return self.items.pop()
+```
+
+**Swift:**
+```swift
+struct Stack<Element> {
+    var items: [Element] = []
+    
+    mutating func push(_ item: Element) {
+        items.append(item)
+    }
+    
+    mutating func pop() -> Element {
+        return items.removeLast()
+    }
+}
+
+var stackOfStrings = Stack<String>()
+stackOfStrings.push("uno")
+stackOfStrings.push("dos")
+```
+
+### 타입 제약 (Type Constraints)
+
+제네릭 매개변수가 특정 클래스를 상속하거나 특정 프로토콜을 준수하도록 요구할 수 있습니다. 이는 파이썬에서 `issubclass`나 특정 속성의 존재를 기대하는 것(Duck Typing)을 정적이고 안전하게 구현하는 방법입니다.
+
+**Swift:**
+```swift
+func findIndex<T: Equatable>(of valueToFind: T, in array:[T]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+
+let doubleIndex = findIndex(of: 9.3, in: [3.14159, 0.1, 0.25])
+let stringIndex = findIndex(of: "Andrea", in: ["Mike", "Malcolm", "Andrea"])
+```
+`Equatable`이라는 프로토콜 제약을 주면, 비교 연산자(`==`)를 안전하게 사용할 수 있습니다.

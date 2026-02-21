@@ -1,0 +1,40 @@
+# Swift 패키지 매니저 (SwiftPM)
+
+파이썬 개발에서 모듈 의존성을 관리할 때 주로 `pip`, `requirements.txt`, 또는 `poetry` 등을 사용합니다. Swift에서는 언어 내장인 **Swift Package Manager (SwiftPM)** 가 표준 역할을 수행합니다.
+
+### Pip vs SwiftPM
+
+**파이썬 의존성 관리:**
+```bash
+# 새로운 패키지를 설치합니다 (가상 환경 사용 권장)
+pip install requests
+```
+그리고 이 정보를 `requirements.txt` 또는 `pyproject.toml` 등에 남깁니다.
+
+**Swift 의존성 관리:**
+Swift에서는 프로젝트의 `Package.swift` 파일(매니페스트 파일)에 코드로 의존성을 관리합니다. 이 파일 자체도 Swift로 작성되어 있습니다.
+
+```swift
+// swift-tools-version:5.7
+import PackageDescription
+
+let package = Package(
+    name: "MyCLIApp",
+    dependencies: [
+        // 외부 패키지를 URL로 참조합니다
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
+    ],
+    targets: [
+        .executableTarget(
+            name: "MyCLIApp",
+            dependencies: [
+                // 의존성 라이브러리와 타겟(모듈)을 연결합니다
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]),
+    ]
+)
+```
+
+`swift build` 명령을 실행하면 이 매니페스트를 참고하여 깃허브 저장소에서 라이브러리를 가져와 빌드 캐시에 저장한 뒤, 애플리케이션을 컴파일하게 됩니다. 파이썬의 `pip freeze`나 잠금 파일(Lockfile)의 개념이 `Package.resolved`에 동일하게 반영됩니다.
+
+가장 중요한 차이는 SwiftPM은 C, C++, Objective-C 코드의 직접적인 컴파일도 지원하여 네이티브 패키지 배포가 매우 일원화되어 있다는 점입니다.

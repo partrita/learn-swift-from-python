@@ -1,0 +1,71 @@
+# 프로퍼티 래퍼 (Property Wrappers)
+
+프로퍼티 래퍼는 Swift에서 파이썬의 데코레이터(Decorators)와 매우 비슷해 보이지만 약간 다른 용도로 사용되는 강력한 기능입니다. 값을 저장하고 계산하는 로직과 값을 정의하는 코드를 분리할 수 있게 해줍니다.
+
+### 파이썬에서의 데코레이터 패턴과 비교
+
+파이썬에서는 주로 함수의 실행 전후를 감시하거나 상태를 변경할 때 데코레이터를 사용합니다 (`@property` 또한 메서드를 프로퍼티처럼 접근 가능하게 합니다). 
+
+**파이썬:**
+```python
+def clamped_property(min_val, max_val):
+    def decorator(cls):
+        # 내부 구조 상 프록시 속성을 구현... (생략)
+        return cls
+    return decorator
+
+# 또는 Python 프로퍼티의 setter
+class Rectangle:
+    def __init__(self, size):
+        self._size = size
+        
+    @property
+    def size(self):
+        return self._size
+        
+    @size.setter
+    def size(self, value):
+        self._size = max(0, min(100, value))
+```
+
+### Swift의 @propertyWrapper
+
+Swift에서는 변수가 값을 가지기 직전과 직후의 동작을 감싸서 추상화할 수 있도록 프로퍼티 래퍼를 도입했습니다. 다음과 같이 변수 이름 위에 파이썬 데코레이터처럼 `@`를 사용합니다.
+
+**Swift:**
+```swift
+@propertyWrapper
+struct Clamped<Value: Comparable> {
+    private var value: Value
+    private let min: Value
+    private let max: Value
+    
+    init(wrappedValue: Value, min: Value, max: Value) {
+        self.min = min
+        self.max = max
+        self.value = min // 기본값 설정
+        self.wrappedValue = wrappedValue // 로직을 태움
+    }
+    
+    var wrappedValue: Value {
+        get { return value }
+        set { value = min...max ~= newValue ? newValue : (newValue < min ? min : max) }
+    }
+}
+
+// 0에서 100 사이의 값으로 자동 제한(Clamping)
+struct Character {
+    @Clamped(min: 0, max: 100) var health: Int = 100
+}
+
+var hero = Character()
+print(hero.health) // 100
+
+hero.health = 150
+print(hero.health) // 100 (최댓값으로 제한됨)
+
+hero.health = -20
+print(hero.health) // 0 (최솟값으로 제한됨)
+```
+
+프로퍼티 래퍼는 로컬 변수는 물론 SwiftUI 같은 프레임워크에서도 `@State`, `@Binding`, `@Environment` 등으로 상태 관리에 폭넓게 사용되어 코드의 보일러플레이트를 줄여줍니다.
