@@ -28,7 +28,7 @@ class Rectangle:
         self._size = max(0, min(100, value))
 ```
 
-### Swift의 @propertyWrapper
+### Swift의 `@propertyWrapper`
 
 Swift에서는 변수가 값을 가지기 직전과 직후의 동작을 감싸서 추상화할 수 있도록 프로퍼티 래퍼를 도입했습니다. 다음과 같이 변수 이름 위에 파이썬 데코레이터처럼 `@`를 사용합니다.
 

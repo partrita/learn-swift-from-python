@@ -17,7 +17,7 @@ html = Tag("html", [
 ])
 ```
 
-### Swift의 @resultBuilder
+### Swift의 `@resultBuilder`
 
 Swift에서는 이를 위해 파라미터 영역 내에서 조건문이나 반복문을 포함한 모든 선언문을 특정 구조체(결과)로 모아주는 능력을 제공합니다.
 
