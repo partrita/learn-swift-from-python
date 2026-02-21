@@ -1,0 +1,173 @@
+# 오류 처리
+
+Swift는 런타임에 복구 가능한 오류를 발생시키고, 잡고, 전파하고, 조작하기 위한 일급 지원을 제공합니다. 이는 값의 부재를 처리하는 옵셔널과 다릅니다. 오류 처리는 작업의 예기치 않은 결과를 다룹니다.
+
+파이썬은 예외 처리를 위해 `try-except-finally` 블록을 사용합니다.
+
+### 오류 표현 및 발생
+Swift에서 오류는 `Error` 프로토콜(빈 프로토콜)을 준수하는 타입의 값으로 표현됩니다. 열거형은 관련된 오류 조건 그룹을 모델링하는 데 종종 적합합니다.
+
+```swift
+enum VendingMachineError: Error { // Error 프로토콜 준수
+    case invalidSelection
+    case insufficientFunds(coinsNeeded: Int)
+    case outOfStock
+}
+
+// 오류 발생
+// throw VendingMachineError.insufficientFunds(coinsNeeded: 5)
+```
+
+### 오류 처리
+함수가 오류를 발생시키면 프로그램 흐름이 변경됩니다.
+
+#### `throws`를 사용하여 오류 전파
+함수는 선언에 `throws` 키워드를 포함하여 오류를 발생시킬 수 있음을 나타냅니다.
+`throws` 함수를 호출하는 경우 오류를 처리하거나(`do-catch`, `try?` 또는 `try!` 사용) 현재 함수도 `throws`로 표시하여 오류를 전파해야 합니다.
+
+```swift
+struct Item {
+    var price: Int
+    var count: Int
+}
+
+class VendingMachine {
+    var inventory = [
+        "Candy Bar": Item(price: 12, count: 7),
+        "Chips": Item(price: 10, count: 4),
+        "Pretzels": Item(price: 7, count: 11)
+    ]
+    var coinsDeposited = 0
+
+    func vend(itemNamed name: String) throws { // 이 함수는 오류를 발생시킬 수 있습니다
+        guard let item = inventory[name] else {
+            throw VendingMachineError.invalidSelection
+        }
+        guard item.count > 0 else {
+            throw VendingMachineError.outOfStock
+        }
+        guard item.price <= coinsDeposited else {
+            throw VendingMachineError.insufficientFunds(coinsNeeded: item.price - coinsDeposited)
+        }
+
+        coinsDeposited -= item.price
+        var newItem = item
+        newItem.count -= 1
+        inventory[name] = newItem
+
+        print("\(name) 제공 중")
+    }
+}
+```
+
+#### `do-catch`를 사용하여 오류 처리
+`do-catch` 문은 코드 블록을 실행합니다. `do` 절 내에서 오류가 발생하면 `catch` 절과 일치시켜 어떤 절이 오류를 처리할 수 있는지 결정합니다.
+
+```swift
+let favoriteSnacks = [
+    "Alice": "Chips",
+    "Bob": "Licorice", // 오류 발생 원인
+    "Eve": "Pretzels",
+]
+
+func buyFavoriteSnack(person: String, vendingMachine: VendingMachine) throws {
+    let snackName = favoriteSnacks[person] ?? "Candy Bar"
+    try vendingMachine.vend(itemNamed: snackName) // 'try' 키워드 필요
+}
+
+var vendingMachine = VendingMachine()
+vendingMachine.coinsDeposited = 100
+
+// 예제 1: 특정 오류 잡기
+func attemptToBuySnack(person: String) {
+    do {
+        try buyFavoriteSnack(person: person, vendingMachine: vendingMachine)
+        print("\(person)을(를) 위한 간식을 성공적으로 구매했습니다.")
+    } catch VendingMachineError.invalidSelection {
+        print("\(person)에 대한 잘못된 선택입니다.")
+    } catch VendingMachineError.outOfStock {
+        print("\(person)에 대한 재고가 없습니다.")
+    } catch VendingMachineError.insufficientFunds(let coinsNeeded) {
+        print("\(person)에 대한 자금이 부족합니다. \(coinsNeeded) 코인을 추가로 넣어주세요.")
+    } catch { // 일반 catch 블록 (오류는 'error'로 암시적으로 사용 가능)
+        print("\(person)에 대한 예기치 않은 오류: \(error).")
+    }
+}
+
+attemptToBuySnack(person: "Alice") // Alice를 위한 간식을 성공적으로 구매했습니다. (칩 가격 <= 100 가정)
+// (칩 구매 후, coinsDeposited가 이제 90이라고 가정)
+attemptToBuySnack(person: "Bob")   // Bob에 대한 잘못된 선택입니다. (Licorice 재고 없음)
+attemptToBuySnack(person: "Eve")   // Eve를 위한 간식을 성공적으로 구매했습니다. (프레첼 가격 <= 90 가정)
+
+// 예제 2: 오류 전파
+// func someFunctionThatCallsThrowingFunction() throws {
+//     try vendingMachine.vend(itemNamed: "Candy Bar")
+// }
+```
+
+#### 오류를 옵셔널 값으로 변환 (`try?`)
+`try?`를 사용하여 오류를 옵셔널 값으로 변환하여 처리합니다. `try?` 표현식을 평가하는 동안 오류가 발생하면 표현식의 값은 `nil`이 됩니다.
+
+```swift
+// func someThrowingFunction() throws -> Int { /* ... */ }
+
+let x = try? someThrowingFunction() // x는 Int? 타입입니다
+// someThrowingFunction이 오류를 발생시키면 x는 nil이 됩니다. 그렇지 않으면 x는 반환된 Int입니다.
+
+// vend 예제:
+func fetchData() -> Data? { // 데이터를 반환하거나 nil을 반환할 수 있는 예제 함수
+    if let data = try? Data(contentsOf: URL(string: "http://example.com/data.txt")!) {
+        return data
+    } else {
+        print("데이터를 가져올 수 없습니다.")
+        return nil
+    }
+}
+```
+
+#### 오류 전파 비활성화 (`try!`)
+던지는 함수나 메서드가 런타임에 실제로 오류를 발생시키지 않을 것이라고 확신할 때 `try!`를 사용합니다. 오류가 *발생하면* 런타임 오류(크래시)가 발생합니다. 극도의 주의를 기울여 사용하십시오.
+
+```swift
+// let photo = try! loadImage(atPath: "./Resources/JohnAppleseed.jpg")
+// 이 코드는 해당 경로에 대해 loadImage가 절대 실패하지 않을 것이라고 가정합니다.
+```
+
+#### 정리 작업 지정 (`defer`)
+`defer` 문은 실행이 현재 범위를 벗어나기 직전에 코드 블록을 실행합니다 (예: 함수 반환, 오류 발생, 반복문 중단). 리소스 정리에 유용합니다. `defer` 문은 나타난 순서의 역순으로 실행됩니다.
+
+**파이썬 (`finally` 사용):**
+```python
+# file = None
+# try:
+#     file = open("myfile.txt", "r")
+#     # 파일 처리
+# finally:
+#     if file:
+#         file.close()
+#         print("finally에서 파일 닫힘.")
+```
+
+**Swift:**
+```swift
+func processFile(filename: String) throws {
+    let file = open(filename, O_RDONLY) // C 스타일 파일 열기
+    if file == -1 {
+        // throw FileError.couldNotOpen
+        print("파일을 열 수 없습니다.")
+        return
+    }
+    defer { // 범위가 종료될 때 실행됨 (반환 또는 오류)
+        close(file)
+        print("defer에서 파일 닫힘.")
+    }
+
+    // 파일 작업...
+    // 여기서 오류가 발생하거나 함수가 반환되면 defer 블록이 여전히 실행됩니다.
+    print("파일 처리 중...")
+    // 작업 시뮬레이션, 오류 발생 가능성
+    // if someCondition { throw FileError.readFailed }
+}
+
+// try processFile(filename: "example.txt")
+```

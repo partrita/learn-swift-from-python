@@ -1,0 +1,33 @@
+project:
+  type: book
+
+book:
+  title: "learn-swift-from-python"
+  author: "Norah Jones"
+  date: "2/21/2026"
+  chapters:
+    - index.qmd
+    - ch01.qmd
+    - ch02.qmd
+    - ch03.qmd
+    - ch04.qmd
+    - ch05.qmd
+    - ch06.qmd
+    - ch07.qmd
+    - ch08.qmd
+    - ch09.qmd
+    - ch10.qmd
+    - ch11.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+
+
